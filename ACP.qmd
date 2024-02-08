@@ -1,0 +1,302 @@
+---
+title: "Analyse en composantes principales"
+author: "Mariam SYLLA"
+format: 
+  html:
+    code-fold: true
+editor: visual
+---
+
+## Introduction:
+
+L’analyse de données multidimensionnelles est une méthode de la statistique descriptive permettant de traiter simultanément un grand nombre de variables. Dans ce projet nous allons nous intéresser à l’analyse en composantes principales ACP. Il s’agit d’une methode qui permet de simplifier la complexité des données tout en préservant autant que possible les informations importantes.Elle transforme les variables originales en un nouveau système de coordonnées, les composantes principales, qui sont des combinaisons linéaires des variables originales
+
+## Définition du problème:
+
+La base de données contient les informations sur les differentes consommations de la population en France. Nous allons considérer les 7 premières lignes comme des variables actives, les autres décrivent des individus supplémentaires.
+
+Les différentes variables sont:
+
+\[1\] "pain.céréales"                 
+
+ \[2\] "viandes"                       
+
+ \[3\] "poissons.fruits.de.mer"        
+
+ \[4\] "lait.fromages.oeufs"           
+
+ \[5\] "huiles.graisses"               
+
+ \[6\] "fruits"                        
+
+ \[7\] "légumes"                       
+
+ \[8\] "sucre.produits.sucrés"         
+
+ \[9\] "café.thé.cacao"                
+
+\[10\] "eaux.boissons.jus"  
+
+\[11\] "boissons.alcoolisées"          
+
+\[12\] "restauration"                  
+
+\[13\] "tabac"                         
+
+\[14\] "habillement.articles.chaussants"
+
+\[15\] "logement.eau.gaz.électricité"  
+
+\[16\] "ameublement.équipement.ménager"
+
+\[17\] "santé"                         
+
+\[18\] "transports"                    
+
+\[19\] "communications"                
+
+\[20\] "loisirs.culture"               
+
+\[21\] "enseignement"   
+
+## Importation des données
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# importation des données
+df<- read.csv("conso1.csv",header=TRUE, row.names=1)
+head(df)
+```
+
+## Nettoyage des données
+
+### Analyse exploratoire
+
+```{r}
+#| echo=TRUE, message=FALSE, warning=FALSE
+# Analyse des valeurs manquantes
+summary(df) # affichage des statistiques descriptives
+library("DataExplorer")
+introduce(df)
+dim(df)
+```
+
+Dans le resumé des données on voit qu'il n'y a pas de données manquantes, mais nous allons quand même faire la vérification
+
+### Detection des données manquantes
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+
+# Determiner le nombre de valeurs manquantes
+nrow(df[!complete.cases(df),]) 
+```
+
+```{r}
+library(naniar)
+# Analyse des valeurs manquantes
+vis_miss(df) # Visualisation des données manquantes
+```
+
+On voit bien qu'il n'y a pas de valeurs manquantes
+
+### Visualisation des valeurs aberrantes
+
+```{r}
+# Fonction pour tracer un boxplot
+dfboxplot <- function(data, nomVariable) {
+  # Utiliser le nom de la variable pour générer le titre et le label de l'axe des y
+  titre <- paste(nomVariable)
+  ylab <- nomVariable
+  
+  # Tracer le boxplot
+  boxplot(data[[nomVariable]], main = titre, ylab = ylab)
+}
+
+# Définir le layout des graphiques en dehors de la fonction
+par(mfrow=c(3, 3), mar=c(3, 3, 3, 3))
+
+# Appeler la fonction pour chaque variable
+dfboxplot(df, "pain.céréales")
+dfboxplot(df,"viandes")
+dfboxplot(df, "poissons.fruits.de.mer")
+dfboxplot(df, "lait.fromages.oeufs")
+dfboxplot(df, "huiles.graisses")
+dfboxplot(df, "fruits")
+dfboxplot(df, "légumes")
+dfboxplot(df, "sucre.produits.sucrés")
+dfboxplot(df, "café.thé.cacao")
+```
+
+```{r}
+# Fonction pour tracer un boxplot
+dfboxplot <- function(data, nomVariable) {
+  # Utiliser le nom de la variable pour générer le titre et le label de l'axe des y
+  titre <- paste(nomVariable)
+  ylab <- nomVariable
+  
+  # Tracer le boxplot
+  boxplot(data[[nomVariable]], main = titre, ylab = ylab)
+}
+
+# Définir le layout des graphiques en dehors de la fonction
+
+par(mfrow=c(3, 3), mar=c(3, 3, 3, 3))
+
+# Appeler la fonction pour chaque variable
+
+dfboxplot(df,"eaux.boissons.jus")
+dfboxplot(df, "boissons.alcoolisées")
+dfboxplot(df, "restauration")
+dfboxplot(df, "tabac")
+dfboxplot(df, "habillement.articles.chaussants")
+dfboxplot(df, "logement.eau.gaz.électricité")
+dfboxplot(df, "ameublement.équipement.ménager")
+dfboxplot(df, "santé")
+dfboxplot(df, "transports")
+dfboxplot(df, "communications")
+dfboxplot(df, "loisirs.culture")
+dfboxplot(df, "enseignement")
+```
+
+Nous avons des valeurs aberrantes au niveau des variables "viandes", "huiles.graisses", "fruits","légumes", "boissons.alcoolisées", "tabac", "logement.eau.gaz.électricités", "ameublement.équipement.ménager", "santé", "loisirs.culture", "enseignement". Nous n'allons pas traiter ces Outliers comme on n'a pas suffisammennt de données, allons continuer les analyses et voir ce que ça donne.
+
+## Description des données
+
+### Visualisation de la distribution des données
+
+```{r}
+# Histogramme
+plot_histogram(df) 
+```
+
+```{r}
+# Q-Q plot
+plot_qq(df)
+```
+
+### Corrélation entre les variables
+
+```{r}
+# Matrice de correlation
+matrice.corr<-cor(df)
+matrice.corr
+```
+
+### Test pour voir si les variables sont corrélées entre elles
+
+```{r}
+library(psych)
+# Test pour savoir si on a une matrice de correlation identité
+det(matrice.corr)
+cortest.bartlett(matrice.corr,n=17)
+```
+
+La p-valeur étant\<5% donc nous rejettons l'hypothèse nulle d'une matrice identité, les variables sont donc corrélées entre elles.
+
+### Aperçu général sur la qualité du dataset
+
+```{r}
+#| echo=TRUE, message=FALSE, warning=FALSE
+# Calcul de l'indice de KMO
+KMO(matrice.corr)
+```
+
+On a un indice KMO de 0.5 ce qui veut dire qu'on a bien une solution factorielle mais elle est mediocre
+
+## Analyse en composantes principales
+
+```{r}
+#ACP avec mise à l'echelle des données pas de graphique pour le moment
+library(FactoMineR)
+res<- PCA(df,scale.unit = T, graph = F, ind.sup=8:17) 
+```
+
+### Choix des axes
+
+```{r}
+#| echo=TRUE, message=FALSE, warning=FALSE
+# Graphique des valeurs propres
+library(factoextra)
+screen.plot<-fviz_eig(res,addlabels = T,ylim=c(0,60))
+screen.plot
+```
+
+```{r}
+# Valeurs Propres
+library(factoextra)
+val_propres=get_eigenvalue(res)
+val_propres
+```
+
+Le premier axe explique 55,72% de la variance total, le deuxième axe explique 38.46% des informations, le deux premiers axes expliquent 94,18% de l'information de la base de donnée, ce qui représente un bon taux, donc on peut choisir les deux premiers axes
+
+### contribution des variables et individus sur les deux premiers axes
+
+```{r}
+# contribution des variables sur les deux premiers axes
+library("factoextra")
+fviz_contrib(res,choice="var",axe=1:2)
+```
+
+```{r}
+# Resumé de l'ACP
+summary(res,ncp=2)
+```
+
+```{r}
+# Cos2 des variables
+library("factoextra")
+var <- get_pca_var(res)
+# Cos2 des variables
+var$cos2
+
+```
+
+```{r}
+# Total cos2 des variables sur les deux premiers axes
+library("factoextra")
+fviz_cos2(res, choice = "var", axes = 1:2)
+```
+
+```{r}
+# contribution des individus sur les deux premiers axes
+library("factoextra")
+fviz_contrib(res,choice="ind",axe=1:2)
+```
+
+```{r}
+# Total cos2 des individus sur les deux premiers axes
+library("factoextra")
+fviz_cos2(res, choice = "ind", axes = 1:2)
+```
+
+### Les graphiques
+
+#### Graphique des variables
+
+```{r}
+library("factoextra")
+# Graphique des variable Coloré en fonction de la valeur du cos2 
+fviz_pca_var(res, col.var = "cos2",
+             repel = TRUE # Avoid text overlapping
+             )
+```
+
+#### Graphique des individus
+
+```{r}
+library("factoextra")
+fviz_pca_ind(res, col.ind = "cos2",repel = TRUE # Avoid text overlapping (slow if many points)
+             )
+```
+
+#### Graphique finale des individus et variables
+
+```{r}
+#| echo=TRUE, message=FALSE, warning=FALSE
+# graphique final des individus et variables
+library("factoextra")
+fviz_pca_biplot(res,repel=TRUE,cex=0.8, invisible="ind.sup",col.ind="#FC4E07",ggtheme=theme_minimal())
+```
+
+les Personnes de "45-54 ans" consomment plus de"pain.céréales", participent au "loisirs.culture" et depensent dans les "ameublement.équipement.ménager". Celles "35-44 ans" quand à elle depensent plus dans les "transports". Les personnes de "moins 25 ans" opposées à ces deux tranche d'age consomment plus dans "logement.eau.gaz.électricité". Les personnes de "55-64 ans" consomment plus de "legumes", "viandes" et depensent dans la "santé"
