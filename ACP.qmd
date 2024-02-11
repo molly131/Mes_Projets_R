@@ -9,13 +9,13 @@ editor: visual
 
 ## Introduction:
 
-L’analyse de données multidimensionnelles est une méthode de la statistique descriptive permettant de traiter simultanément un grand nombre de variables. Dans ce projet nous allons nous intéresser à l’analyse en composantes principales ACP. Il s’agit d’une methode qui permet de simplifier la complexité des données tout en préservant autant que possible les informations importantes.Elle transforme les variables originales en un nouveau système de coordonnées, les composantes principales, qui sont des combinaisons linéaires des variables originales
+L’analyse de données multidimensionnelles est une méthode de la statistique descriptive permettant de traiter simultanément un grand nombre de variables. Dans ce projet nous allons nous intéresser à l’analyse en composantes principales ACP. Il s’agit d’une méthode qui permet de simplifier la complexité des données tout en préservant autant que possible les informations importantes. Elle transforme les variables originales en un nouveau système de coordonnées, les composantes principales, qui sont des combinaisons linéaires des variables originales
 
 ## Définition du problème:
 
-La base de données contient les informations sur les differentes consommations de la population en France. Nous allons considérer les 7 premières lignes comme des variables actives, les autres décrivent des individus supplémentaires.
+La base de données contient les informations sur les différentes consommations de la population en France. Nous allons considérer les 7 premières lignes comme des variables actives, les autres décrivent des individus supplémentaires.
 
-Les différentes variables sont:
+Les différentes variables sont :
 
 \[1\] "pain.céréales"                 
 
@@ -80,9 +80,9 @@ introduce(df)
 dim(df)
 ```
 
-Dans le resumé des données on voit qu'il n'y a pas de données manquantes, mais nous allons quand même faire la vérification
+Dans le resumé des données on voit qu'il n'y a pas de valeurs manquantes, mais nous allons quand même faire la vérification
 
-### Detection des données manquantes
+### Détection des valeurs manquantes
 
 ```{r}
 #| echo=FALSE, message=FALSE, warning=FALSE
@@ -158,7 +158,7 @@ dfboxplot(df, "loisirs.culture")
 dfboxplot(df, "enseignement")
 ```
 
-Nous avons des valeurs aberrantes au niveau des variables "viandes", "huiles.graisses", "fruits","légumes", "boissons.alcoolisées", "tabac", "logement.eau.gaz.électricités", "ameublement.équipement.ménager", "santé", "loisirs.culture", "enseignement". Nous n'allons pas traiter ces Outliers comme on n'a pas suffisammennt de données, allons continuer les analyses et voir ce que ça donne.
+Nous avons des valeurs aberrantes au niveau des variables "viandes", "huiles.graisses", "fruits","légumes", "boissons.alcoolisées", "tabac", "logement.eau.gaz.électricités", "ameublement.équipement.ménager", "santé", "loisirs.culture", "enseignement". Nous n'allons pas traiter ces Outliers comme on n'a pas suffisamment de données, allons continuer les analyses et voir ce que ça donne.
 
 ## Description des données
 
@@ -191,7 +191,7 @@ det(matrice.corr)
 cortest.bartlett(matrice.corr,n=17)
 ```
 
-La p-valeur étant\<5% donc nous rejettons l'hypothèse nulle d'une matrice identité, les variables sont donc corrélées entre elles.
+La p-valeur étant\<5% donc nous rejetons l'hypothèse nulle d'une matrice identité, donc il existe au moins une variable qui est combinaison linéaire d'autres variables
 
 ### Aperçu général sur la qualité du dataset
 
@@ -201,7 +201,7 @@ La p-valeur étant\<5% donc nous rejettons l'hypothèse nulle d'une matrice iden
 KMO(matrice.corr)
 ```
 
-On a un indice KMO de 0.5 ce qui veut dire qu'on a bien une solution factorielle mais elle est mediocre
+On a un indice KMO de 0.5 ce qui veut dire qu'on a bien une solution factorielle
 
 ## Analyse en composantes principales
 
@@ -228,9 +228,9 @@ val_propres=get_eigenvalue(res)
 val_propres
 ```
 
-Le premier axe explique 55,72% de la variance total, le deuxième axe explique 38.46% des informations, le deux premiers axes expliquent 94,18% de l'information de la base de donnée, ce qui représente un bon taux, donc on peut choisir les deux premiers axes
+Le premier axe explique 55,72% de la variance totale, le deuxième axe explique 38.46% des informations, les deux premiers axes expliquent 94,18% de l'information de la base de données, ce qui représente un bon taux, donc on peut choisir les deux premiers axes
 
-### contribution des variables et individus sur les deux premiers axes
+### Contribution des variables et individus sur les deux premiers axes
 
 ```{r}
 # contribution des variables sur les deux premiers axes
@@ -290,7 +290,7 @@ fviz_pca_ind(res, col.ind = "cos2",repel = TRUE # Avoid text overlapping (slow i
              )
 ```
 
-#### Graphique finale des individus et variables
+#### Graphique final des individus et variables
 
 ```{r}
 #| echo=TRUE, message=FALSE, warning=FALSE
@@ -299,4 +299,4 @@ library("factoextra")
 fviz_pca_biplot(res,repel=TRUE,cex=0.8, invisible="ind.sup",col.ind="#FC4E07",ggtheme=theme_minimal())
 ```
 
-les Personnes de "45-54 ans" consomment plus de"pain.céréales", participent au "loisirs.culture" et depensent dans les "ameublement.équipement.ménager". Celles "35-44 ans" quand à elle depensent plus dans les "transports". Les personnes de "moins 25 ans" opposées à ces deux tranche d'age consomment plus dans "logement.eau.gaz.électricité". Les personnes de "55-64 ans" consomment plus de "legumes", "viandes" et depensent dans la "santé"
+Les Personnes de "45-54 ans" consomment plus de "pain.céréales", participent au "loisirs.culture" et dépensent dans les "ameublement.équipement.ménager". Celles "35-44 ans" quant à elles dépensent plus dans les "transports". Les personnes de "moins 25 ans" opposées à ces deux tranches d’âge consomment plus dans "logement.eau.gaz.électricité". Les personnes de "55-64 ans" consomment plus de "legumes", "viandes" et dépensent dans la "santé"
