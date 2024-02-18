@@ -1,0 +1,240 @@
+---
+title: "Analyse factorielle des correspondances"
+author: "Mariam SYLLA"
+format: 
+  html:
+    code-fold: true
+editor: visual
+---
+
+## Introduction:
+
+L'analyse factorielle des correspondances (AFC) est une méthode statistique d'analyse des données qui permet d'étudier l'association entre deux variables catégorielles avec plusieurs modalités. L'objectif est de représenter un maximum de l'inertie totale sur le premier axe factoriel, un maximum de l'inertie résiduelle sur le second axe, et ainsi de suite jusqu'à la dernière dimension.
+
+## Définition du problème:
+
+Le dataset est constitué des informations sur les causes de décès en fonctions des tranches d’âge. .
+
+## Importation des données
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# importation des données
+df<- read.csv("deces_afc.csv",header=TRUE,sep=";", row.names=1)
+head(df)
+```
+
+## Nettoyage des données
+
+### Analyse exploratoire
+
+```{r}
+#| echo=TRUE, message=FALSE, warning=FALSE
+# Analyse des valeurs manquantes
+summary(df) # affichage des statistiques descriptives
+library("DataExplorer")
+introduce(df)
+dim(df)
+```
+
+D'après ce resumé il n'y a aucune valeur manquantes et nous avons 41 observation.
+
+### Détection des valeurs manquantes
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+
+# Determiner le nombre de valeurs manquantes
+nrow(df[!complete.cases(df),]) 
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library(naniar)
+# Analyse des valeurs manquantes
+vis_miss(df) # Visualisation des données manquantes
+```
+
+Pas de données manquantes.
+
+## Description des données
+
+### Profil colonne
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+# Calcul du profil colonne
+# Calculer les totaux par tranche d'âge
+totaux_par_age <- colSums(df[, -1])  # Exclure la première colonne contenant les noms des maladies
+
+# Calculer le total général pour obtenir les pourcentages
+total_general <- sum(totaux_par_age)
+
+# Calculer les pourcentages par tranche d'âge
+pourcentages_par_age <- (totaux_par_age / total_general) * 100
+
+# Créer un dataframe pour le graphique
+donnees_age <- data.frame(
+  TrancheAge = names(totaux_par_age),
+  Total = as.numeric(totaux_par_age),
+  pourcentage=pourcentages_par_age 
+)
+library(dplyr)
+donnees_age1=donnees_age %>%
+  select(-TrancheAge)
+donnees_age1
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library(ggplot2)
+
+# Réorganiser les données par pourcentage croissant
+donnees_age <- donnees_age[order(donnees_age$pourcentage), ]
+
+# Créer le graphique en barres pour les pourcentages par tranche d'âge, par ordre croissant
+ggplot(donnees_age, aes(x = reorder(TrancheAge, pourcentage), y = pourcentage)) +
+  geom_bar(stat = "identity", fill = "skyblue") + # Utilisation d'une couleur fixe pour toutes les barres
+  geom_text(aes(label = sprintf("%.2f%%", pourcentage)), # Ajout des étiquettes avec formatage pourcentage
+            position = position_stack(vjust = 0.5), # Ajuste la position des étiquettes pour qu'elles soient au centre des barres
+            color = "black", # Couleur du texte
+            size = 3.5) + # Taille du texte
+  theme_minimal() +
+  labs(title = "Pourcentage du total des cas par tranche d'âge",
+       x = "Tranche d'âge",
+       y = "Pourcentage (%)")
+```
+
+### Profil ligne
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+# Calcul du profil ligne
+# Calculer le total des cas pour chaque maladie
+total_par_maladie <- rowSums(df)
+
+# Calculer le total global des cas
+total_global <- sum(total_par_maladie)
+
+# Calculer la distribution en pourcentage
+distribution_pourcentage <- (total_par_maladie / total_global) * 100
+
+# Créer un dataframe pour les résultats
+resultats <- data.frame(
+  Maladie=names(total_par_maladie ),
+  Total = total_par_maladie,
+  Pourcentage = distribution_pourcentage
+)
+# Afficher les résultats
+library(dplyr)
+resultats1=resultats %>%
+  select(-Maladie)
+print(resultats1)
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library(ggplot2)
+
+# Réorganiser les données par pourcentage croissant
+#resultats <- resultats[order(resultats$Pourcentage), ]
+
+# Créer le graphique en barres pour les pourcentages par maladie, par ordre croissant de pourcentage
+ggplot(resultats, aes(x = reorder(Maladie, Pourcentage), y = Pourcentage)) +
+  geom_bar(stat = "identity", fill = "skyblue") +  # Utilisation d'une couleur fixe pour toutes les barres
+  theme_minimal() +
+  labs(title = "Pourcentage du total des cas par maladie",
+       x = "Maladie",
+       y = "Pourcentage (%)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Incliner les étiquettes de l'axe des x pour éviter le chevauchement
+```
+
+## Analyse factorielle des correspondances
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library(FactoMineR)
+#AFC pas de graphique pour le moment
+res.ca<-CA(df, graph = F) 
+```
+
+### Choix des axes
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+summary(res.ca) 
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+
+# les valeurs propres
+library(factoextra)
+val_propres=get_eigenvalue(res.ca)
+val_propres
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+
+library(factoextra)
+# graphique des valeurs propres
+screen.plot<-fviz_eig(res.ca,addlabels = T,ylim=c(0,50))
+screen.plot
+```
+
+Les deux premiers axes expliquent à peu près 81% des informations ce qui représente un bon taux. Donc on peut choisir les deux axes.
+
+### Contribution des variables sur les deux premiers axes
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library("factoextra")
+# contribution des variables sur l'axe 1 et 2(profil ligne)
+fviz_contrib(res.ca,axe=1:2)
+```
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library("factoextra")
+# contribution des variables sur l'axe 1 et 2(profil colonne)
+fviz_contrib(res.ca,choice="col",axe=1:2)
+```
+
+### Les graphiques
+
+#### Graphique des maladies (profil ligne)
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library("factoextra")
+# graphique
+fviz_ca_row(res.ca,repel=TRUE,title="graphique des maladies")
+```
+
+#### Graphique des tranches d'age (profil colonne)
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library("factoextra")
+# graphique
+fviz_ca_col(res.ca,repel=TRUE,title="graphique des tranches d'age")
+```
+
+Les individus de la tranche d'age "a15-24" sont opposés à ceux de "a0-1"
+
+#### Graphique final
+
+```{r}
+#| echo=FALSE, message=FALSE, warning=FALSE
+library("factoextra")
+# graphique final Selection des top 10 selon le cos2 et la contribution
+fviz_ca_biplot(res.ca,repel=TRUE,cex=0.7,
+              select.col = list(cos2 = 10, contrib = 10),
+  select.row = list(cos2 = 10, contrib = 10),col.row = "black")
+```
+
+Pour ce graphique, étant donné le nombre élevé de variables, le top 10 des variables ont été selectionnées selon le cos2 et la contribution
+
+## Conclusion
+
+Les individus de la tranche d'age "a15-24" opposés à ceux de "a0-1" ont des causes de décès différentes. La première tranche meurent souvent d'accident de transport et la deuxième d'infection période périnatale et de syndrome de mort subite de nourrisson. La tranche d'age "a25-34" a pour cause de décès évènement dont l'intention non déterminée.
